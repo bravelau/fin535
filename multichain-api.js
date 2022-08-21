@@ -21,7 +21,7 @@ io.on("connection", (client) => {
 
 // Function for making a HTTP POST request with the MultiChain API command and parameters
 async function callfunc(api_command, api_param) {
-  let result = await axios.post(
+  const result = await axios.post(
     "http://localhost:12031",
     {
       method: api_command,
@@ -45,63 +45,74 @@ app.get("/", function (req, res) {
 
 // GBA Question 2 - returning an object with single property 'result', 
 //                  returning an object with single property 'error' for error handling
-app.get("/getAddress", function (req, res) {
-  let firstaddress = callfunc("getaddresses", [])
-    .then((resp) => {
-      //extract the 1st address of the response to create an object
-      const output ={"result": resp.result[0]};
-      console.log(output);
-
-      res.send(output);
-    })
-    .catch((e) => {
-      res.send({"error": e});
-    });
+app.get("/getAddress", async (req, res) =>{
+  try{
+    const firstAddress = await callfunc("getaddresses", []);
+    // extract the 1st address of the response to create an object
+    const output ={"result": firstAddress.result[0]};
+    console.log(output);
+    res.send(output);
+  }
+  catch(e){
+    const err = { error: e.response.data.error };
+    console.log(err);
+    res.send(err);
+  }
 });
 
 // GBA Question 3 - returning an object with single property 'result', 
 //                  returning an object with single property 'error' for error handling
-app.get("/getTokenBalances/:address", function (req, res) {
-  let tokenbalances = callfunc("gettokenbalances", [req.params.address,])
-    .then((resp) => {
-      //extract tocken balance from 'address' and asset type as 'GalleryToken'
-      const list = resp.result[req.params.address].filter(
+app.get("/getTokenBalances/:address", async (req, res) => {
+  try{
+    const tokenBalances = await callfunc("gettokenbalances", [req.params.address,]);
+
+    //extract tocken balance from 'address' and asset type as 'GalleryToken'
+    const list = tokenBalances.result[req.params.address].filter(
         (x) => x["asset"] === "GalleryToken"
       );
-      //extract the token id  
-      const result = list.map((item, idx)=>{
+    
+    //extract the token id  
+    const result = list.map((item, idx)=>{
           return item["token"];
       });
 
-      const output = {"result": new Array(result.length)};
-      output["result"] = result;
+    const output = {"result": new Array(result.length)};
+    output["result"] = result;
 
-      console.log(output);
-
-      res.send(output);
-    })
-    .catch((e) => {
-      res.send({"error": e});
-    });
+    console.log(output);
+    res.send(output);
+  }
+  catch(e){
+    const err = { error: e.response.data.error };
+    console.log(err);
+    res.send(err);
+  }
 });
 
 // GBA Question 4 - returning the 'json' property withint the 'data' property
 //                  of the 1st element of the result 
 //                  returning an object with single property 'error' for error handling
-app.get("/getTokenMetadata/:tokenid", function (req, res) {
+app.get("/getTokenMetadata/:tokenid", async (req, res) => {
   const stream = "gallery-token-registry";
   const tkid = req.params.tokenid;
-  let streamkeyitems = callfunc("liststreamkeyitems", [stream, tkid])
-    .then((resp) => {
-      //extract 'json' property of the 'data' property of the 1st element 
+
+  try{
+    const tokenMetadata = await callfunc("liststreamkeyitems", [stream, tkid]);
+   
+    let output = {}
+    if (tokenMetadata.result.length > 0){
+      //if result is not empty 
+      // extract 'json' property of the 'data' property of the 1st element 
       // of the response to create an object
-      const output = {"result": resp.result[0].data.json};
+      output = { result: tokenMetadata.result[0].data.json};
+    }
+    console.log(output);
 
-      console.log(output);
-
-      res.send(output);
-    })
-    .catch((e) => {
-      res.send({"error": e});
-    });
+    res.send(output);
+  }
+  catch(e){
+    const err = { error: e.response.data.error};
+    console.log(e);
+    res.send(err);
+  }
 });
