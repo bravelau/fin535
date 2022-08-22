@@ -60,6 +60,7 @@ const MetadataBox = ({ metadata }) => (
                 alignItems: "center",
                 alignContent: "center",
                 backgroundColor: "#002d5c",
+                overflow: 'auto',
             }}
         >
             <pre>{JSON.stringify(metadata, null, "\t")}</pre>
@@ -164,10 +165,10 @@ const App = () => {
                                     {tokenIds.map((tokenId) => (
                                         <ListItemButton
                                             id={tokenId}
-                                            sx={{ fontSize: "12px" }}
+                                            sx={{ fontSize: "12px", overflow: 'hidden',}}
                                             onClick={handleTokenSelected}
                                         >
-                                            {tokenId}
+                                            {tokenId}    
                                         </ListItemButton>
                                     ))}
                                 </List>
